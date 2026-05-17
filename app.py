@@ -25,5 +25,15 @@ def predict():
                                result="Invalid Input")
 
 if __name__ == "__main__":
-    app.run(debug=True)
-    
+    port = int(os.environ.get("PORT", 5000))
+
+    try:
+        app.run(
+            host="0.0.0.0",
+            port=port,
+            debug=False
+        )
+    finally:
+        if cap:
+            cap.release()
+        cv2.destroyAllWindows()
