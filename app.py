@@ -1,11 +1,24 @@
-from flask import Flask, render_template, request
+import os
+from flask import Flask, render_template, request, jsonify
 from model import predict_performance
 
 app = Flask(__name__)
 
+# Camera is not initialized at startup — deferred to avoid crashes in
+# cloud environments (Railway) where no physical camera is present.
+cap = None
+
+
+@app.route('/health')
+def health():
+    """Health check endpoint for Railway and other platforms."""
+    return jsonify({"status": "ok"}), 200
+
+
 @app.route('/')
 def home():
     return render_template('index.html')
+
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -19,21 +32,12 @@ def predict():
         return render_template('index.html',
                                prediction=marks,
                                result=result)
-    except:
+    except Exception:
         return render_template('index.html',
                                prediction="Error",
                                result="Invalid Input")
 
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-
-    try:
-        app.run(
-            host="0.0.0.0",
-            port=port,
-            debug=False
-        )
-    finally:
-        if cap:
-            cap.release()
-        cv2.destroyAllWindows()
+    app.run(host="0.0.0.0", port=port, debug=False)
